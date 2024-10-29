@@ -9,7 +9,6 @@ import ManageSlicer as ms
 import ManageUI as ui
 
 from ManageRegistration import registration as register
-#COMMENT: this register stores 3D space coordinates measured by the STYLUS, not our sensor
 
 
 class RegisterMandible(ScriptedLoadableModule):
