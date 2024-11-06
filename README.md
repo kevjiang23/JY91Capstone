@@ -86,3 +86,71 @@ python Main.py
 ```
 
 the output will be printed in your command line. 
+
+## Individual Files Summary
+
+A little more on what each file is doing
+
+### ArucoSetting.py
+
+- **Marker Type:** Program accepts ArUco markers defined in `ARUCO_DICT`
+   - Each entry maps a string name, like `DICT_4X4_50`, to a corresponding OpenCV dictionary constant, like `cv.aruco.DICT_4X4_50`
+- **Marker Length:** Specifies physical marker size (24 mm)
+
+### CalibrateCheckerboard.py
+
+```bash 
+def photograph():
+```
+
+- **Streams Webcam:** Opens webcam video stream
+- **User Inputs**
+   - Press `q` to quit
+   - Press `p` to capture an image of chessboard pattern displayed by webcam
+   - Process waits for 16 captures or `q`
+
+```bash
+def calibration():
+```
+**Inputs**
+
+- **Grayscale Conversion:** Reads images and converts to grayscale
+- **Detects Chessboard Pattern:** Uses `cv.findChessboardCorners` to find chessboard pattern. If detected:
+   - Detected 3D points are added to `objpoints` and 2D points to `imgpoints`
+   - Corner point accuracy is refined by `cv.cornerSubPix`
+   - Image is displated with highlighted corners
+- **Camera Calibration:** camera matrix and distortion coefficients are done by `cv.calibrateCamera`
+
+**Outputs** 
+
+- Calibration data is saved and printed
+   - Data (camera matrix, distortion coefficients, rotation, and translational vectors) is saved to `calibration.pckl`
+
+### PnPSolver.py
+
+**Inputs**
+
+- `corners`: Array of detected marker corners for each marker
+- `marker_size`: Physical size of the marker in millimeters
+- `mtx`: Camera matrix or the intrinsic camera parameters (focal length, optical center, etc)
+- `distortion`: Camera distortion coefficients matrix for lens distortion
+
+**Process**
+
+- **Defines Object Points:** Defines `object_points` based on physical marker size to represent corners in 3D space
+- **Pose Estimation:** `cv.solvePnP` uses known 3D `object_points` and corresponding 2D `corners` in the image to find:
+   - Rotation vector `rvec` for marker orientation
+   - Translation vector `tvec` for marker position
+   - Note: `cv.SOLVEPNP_IPPE_SQUARE` optimizes pose estimation for square markers
+
+**Outputs**
+
+Rotational vector `R`, translational vector `T`, and 3D coordinates of marker's corners `object_points`
+
+## ReferencePointsDetectionV2.py
+
+## Refinement.py
+
+## Utility.py
+
+## VMPDetectionFxns.py
