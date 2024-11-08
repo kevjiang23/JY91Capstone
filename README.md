@@ -149,8 +149,252 @@ Rotational vector `R`, translational vector `T`, and 3D coordinates of marker's 
 
 ## ReferencePointsDetectionV2.py
 
+**Inputs**
+
+- `original_fram`: Original image where detected reference points will be highlighted
+- `masked_frame`: Masked version of the image used for detection processing
+
+**Process**
+
+1. **Grayscale Conversion and Histogram Analysis:** 
+   - Converts `masked_frame` to grayscale
+   - Calculates histogram of pixel intensities to find a threshold (`color_substitution`) based on intensity frequencies, ensuring that the selected threshold highlights desired regions in the image
+2. **Threshold and Noise Reduction:**
+   - If a valid `color_substitution` is found, replaces specific pixel intensities to enhance areas of interest
+   - Applies Gaussian blur to reduce noise, then uses Otsu’s thresholding for binary conversion
+   - Inverts the binary image to create a mask with clear delineations for contour detection
+3. **Contour Detection and Filtering:**
+   - Finds contours in the processed binary image
+   - For each contour, calculates its area, perimeter, and a roundness factor (`alpha`), which helps distinguish circular objects
+   - Determines the centroid coordinates of each contour that meets the shape threshold (`alpha > 0.1`), adding it to `output_points`
+4. **Marking Detected Points:**
+   - Draws small red circles at each detected reference point in `original_fram` to mark the identified points visually
+
+**Outputs**
+
+- `original_fram`: Original image with red circles marking detected reference points
+- `output_points`: List of coordinates for detected reference points
+
 ## Refinement.py
+
+```bash 
+def draw_square():
+```
+
+**Inputs**
+
+- `frame`: Image where square will be drawn
+- `point1` and `point2`: Opposite corners of the square
+
+**Process**
+
+- Calculates square with `point1` and `point2` as opposite conrers, determining the side length to ensure it's square shaped
+- Draws the square in blue on the image
+
+**Outputs**
+
+Returns modified `frame` with square drawn
+
+```bash 
+def crop_squares():
+```
+
+**Inputs**
+
+- `frame`: Original image
+- `square_coords`: List of coordinates for squares (top-left and bottom-right)
+
+**Process**
+
+- Creates a white mask and fills the square regions in black
+- Inverts mask and applies it to the image, keeping only the areas inside the specified squares
+- Sets the rests of the image to white
+
+**Outputs**
+
+Returns `cropped_frame` with only regions inside squares visible
+
+```bash 
+def detect_circle_centers():
+```
+
+**Inputs**
+
+- `image`: Inputs image
+- `square_coords`: List of coordinates for squares to focus
+
+**Process**
+
+- For each square region, extracts the region of interest (ROI) and applies grayscale and Gaussian blur
+- Detects cirlces in the ROI using `cv.HoughCircles`
+- Adds detected circle centers to `circle_centers` and optionally draws 
+
+**Outputs**
+
+List of coordinates for detected circle centers
+
+```bash 
+def getExistenceRegionFromImage():
+```
+
+**Inputs**
+
+- `corners`: Array of four corners of detected ArUco marker
+- `frame`: Image to process
+
+**Process**
+
+- Expands area around the detected marker by calculating scaled coordinates around the center of the quadrilateral formed by `corners`
+- Draws four squares around the expanded coordinates
+- Crops everything outside these squares by creating a mask, resulting in a green-screen effect around the marker area
+- Creates a `result_frame` by merging the masked areas and fills specific polygon regions in white to highlight areas of interest
+
+**Outputs**
+
+- `result_frame`: Image with highlighted region of interest
+- `masked_frame`: Image with selected regions filled white and the rest set to a green screen
+- `new_coords_backup`: Backup of adjusted coordinates for further
 
 ## Utility.py
 
+```bash 
+def GetCameraParameters():
+```
+
+**Inputs**
+
+- `file_path`: Path to a file containing camera parameters saved as a pickle
+
+**Process**
+
+- Opens the file and loads the camera parameters (camera matrix and distortion coefficients) using `pickle`
+
+**Outputs**
+
+- Returns the camera matrix and distortion coefficients
+
+```bash 
+def rot_params_rv():
+```
+
+**Inputs**
+
+- `R`: Rotation matrix, typically representing the orientation of an object or camera
+
+**Process**
+
+- Calculates yaw, pitch, and roll angles from the rotation matrix `R`, handling cases where the matrix is near singular
+- Converts angles to degrees and rounds them
+
+**Outputs**
+
+- Returns a NumPy array of rotation parameters [yaw, pitch, roll] in degrees
+
+```bash 
+def imageMerger():
+```
+
+**Inputs**
+
+- `image_list`: A list of images to be merged
+
+**Process**
+
+- Filters out `None` images from the list
+- Merges each image by masking the background (white) of the current result image, combining each with the next image in the list
+
+**Outputs**
+
+- Returns the merged image with overlapping content combined
+
+```bash 
+def readConfig():
+```
+
+**Inputs**
+
+- `file_path`: Path to a text file containing integer values
+
+**Process**
+
+- Reads each line in the file and extracts integer values
+
+**Outputs**
+
+- Returns a list of integers from the file
+
+```bash 
+def create_function():
+```
+
+**Inputs**
+
+- `a`, `b`, `c`, `d`: Coefficients for creating a transformation function
+
+**Process**
+
+- Defines an inner function `transform` that applies a linear transformation to a point using the provided coefficients
+
+**Outputs**
+
+- Returns a list of integers from the file
+
+```bash 
+def readMap():
+```
+
+**Inputs**
+
+- `file_path`: Path to a text file containing transformation parameters
+
+**Process**
+
+- Reads lines from the file, with each line containing an integer key and four float parameters
+- Uses `create_function` to generate a transformation function for each key, storing it in a dictionary
+
+**Outputs**
+
+- Returns a dictionary where each key maps to a transformation function based on the parameters from the file
+
 ## VMPDetectionFxns.py
+
+```bash 
+def warp():
+```
+
+**Inputs**
+
+- `anchoring_points`: NumPy array of shape (1, 4, 2), containing the initial anchor points of the LentiMark
+- `marker_corners`: Detected marker corners (reordered to align for perspective transformation)
+- `lentimark_img`: Image containing the LentiMark for perspective correction
+
+**Process**
+
+- Reorders `anchoring_points` based on proximity to `marker_corners`
+- Scales the points slightly to capture the entire VMP
+- Uses the reordered and scaled points for perspective transformation, generating a bird's-eye view of the LentiMark
+
+**Outputs**
+
+- `img_birdview`: Perspective-corrected, bird’s-eye view of the LentiMark, focusing on the VMP area
+
+```bash 
+def blackPeakDetection():
+```
+
+**Inputs**
+
+- `img`: Bird's-eye view image of the LentiMark
+
+**Process**
+
+- Converts `img` to grayscale and calculates luminance values for the x-axis and y-axis VMP regions
+- Defines the scaling factor `d`, representing vertical pixels per millimeter, based on the known physical dimensions (`d1` and `d2`) of the LentiMark
+- Calculates the proportion of black peaks within the VMP regions along the y-axis and x-axis:
+   - **Contrast Enhancement:** Increases contrast with gamma correction
+   - **Thresholding:** Applies Otsu’s binary thresholding to isolate black peaks
+   - **Peak Detection:** Identifies the middle index of zero-pixel regions (representing black) and converts this index to a proportion of the total height
+
+**Outputs**
+
+- Tuple (`y_axis_peak`, `x_axis_peak`): Distances in millimeters representing the peak positions along the y-axis and x-axis VMPs
