@@ -17,6 +17,7 @@ import argparse
 import sys
 import numpy as np
 import cv2 as cv
+from pypylon import pylon
 from ArucoSetting import ARUCO_DICT
 from ArucoSetting import Marker_Length
 from PnPSolver import EstimatePoseSingleMarkers
@@ -208,43 +209,54 @@ def Main(id_list, mapping, calibrationFlag):
     """
     distanace_dict = [(0,0) for id in id_list]
     # open webcam video stream
-    cap = cv.VideoCapture(0)
-    cap.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+
+    #cap = cv.VideoCapture(0) #instead, we're gonna use basler camera:
+    camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+
+    camera.Width = 1920
+    camera.Height = 1080
+        
+    camera.Open()
+    camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+    
+    #cap.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    #cap.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     # width = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
     # height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
 
     distanceArrayX = []
     distanceArrayY = []
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers = 8) as executor:
-    # Currently contains array of all frams taken for analysis
-        while True:
-            ret, original_frame = cap.read()
-            if not ret:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+    # Start grabbing frames for analysis
+        while camera.IsGrabbing():
+        # Retrieve a frame from the Basler camera
+            grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+        
+            if grab_result.GrabSucceeded():
+                # Convert grab result to an OpenCV image (as numpy array)
+                original_frame = grab_result.Array
+            
+                # Submit task to the process pool
+                futures = [executor.submit(DetectLentiMarkTask, original_frame.copy(), id, calibrationFlag) for id in id_list]
+            
+                # Release the grab result after processing to free memory
+                grab_result.Release()
+            
+                # Get results from futures
+                processed_frames = []
+                distance = []
+                translation = []
+                rotation = []
+            
+                for future in futures:
+                    result = future.result()
+                    processed_frames.append(result[0])
+                    distance.append(result[2])
+                    translation.append(result[3])
+                    rotation.append(result[4])
+            else:
                 break
-
-            # submit task to the process pool
-            futures = [executor.submit(DetectLentiMarkTask, original_frame.copy(), id, calibrationFlag) for id in id_list]
-            #DetectLentiMarkTask(original_frame.copy(), 0, True)
-            # get result
-            processed_frames = []
-
-            distance = []
-
-            translation = []
-
-            rotation = []
-
-            for future in futures:#concurrent.futures.as_completed(futures)
-                processed_frames.append(future.result()[0])
-
-                distance.append(future.result()[2])
-
-                translation.append(future.result()[3])
-
-                rotation.append(future.result()[4])
-
 
             # Code for VMP Calibration, triggers when marker is centered and calibrationFlag is active
             if(future.result()[1] == True and calibrationFlag == True):
@@ -305,8 +317,11 @@ def Main(id_list, mapping, calibrationFlag):
             if cv.waitKey(1) & 0xFF == ord('q'):
                     break
     # When everything done, release the capture
-    cap.release()
+    #cap.release() #replaced with below code for basler
     cv.destroyAllWindows()
+
+    camera.StopGrabbing()
+    camera.Close()
 
 
 
