@@ -213,8 +213,8 @@ def Main(id_list, mapping, calibrationFlag):
     #cap = cv.VideoCapture(0) #instead, we're gonna use basler camera:
     camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
 
-    camera.Width = 1920
-    camera.Height = 1080
+    # camera.Width.Value = 1920
+    # camera.Height.Value = 1080
         
     camera.Open()
     camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
@@ -235,8 +235,9 @@ def Main(id_list, mapping, calibrationFlag):
         
             if grab_result.GrabSucceeded():
                 # Convert grab result to an OpenCV image (as numpy array)
-                original_frame = grab_result.Array
-            
+                # original_frame = grab_result.Array
+                original_frame = cv.cvtColor(grab_result.Array, cv.COLOR_GRAY2RGB)
+                
                 # Submit task to the process pool
                 futures = [executor.submit(DetectLentiMarkTask, original_frame.copy(), id, calibrationFlag) for id in id_list]
             
