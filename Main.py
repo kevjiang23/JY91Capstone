@@ -195,6 +195,24 @@ def calculate_average_with_outlier_removal(values):
     # Return the average
     return filtered_mean
 
+def euler_to_rotation_matrix(roll, pitch, yaw):
+    # Create individual rotation matrices for each axis
+    R_x = np.array([[1, 0, 0],
+                    [0, np.cos(roll), -np.sin(roll)],
+                    [0, np.sin(roll), np.cos(roll)]])
+    
+    R_y = np.array([[np.cos(pitch), 0, np.sin(pitch)],
+                    [0, 1, 0],
+                    [-np.sin(pitch), 0, np.cos(pitch)]])
+    
+    R_z = np.array([[np.cos(yaw), -np.sin(yaw), 0],
+                    [np.sin(yaw), np.cos(yaw), 0],
+                    [0, 0, 1]])
+    
+    # Combine rotations (R_z * R_y * R_x)
+    R = np.dot(R_z, np.dot(R_y, R_x))
+    return R
+
 def Main(id_list, mapping, calibrationFlag):
     """
     Main function that performs the pose detection of LentiMarks from video stream.
@@ -306,6 +324,16 @@ def Main(id_list, mapping, calibrationFlag):
                         else:
                             result = func(distanace_dict[markers])
                             print(f"Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0],result[1],rotation[markers][2])}")
+                            #create 4x4 matrix:
+                            tx, ty, tz = translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]
+                            angle_x, angle_y, angle_z = result[0],result[1],rotation[markers][2]
+                            rotation_matrix = euler_to_rotation_matrix(angle_x, angle_y, angle_z)
+
+                            transformation_matrix = np.eye(4)
+                            transformation_matrix[:3, :3] = rotation_matrix
+                            transformation_matrix[:3, 3] = [tx, ty, tz]
+                            
+                            print(transformation_matrix)
                     else:
                         print(f"Can't find a valid mapping for marker: {marker_id}")
                 
