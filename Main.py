@@ -27,6 +27,11 @@ from Refinement import getExistenceRegionFromImage
 from VMPDetectionFxns import blackPeakDetection, warp
 import concurrent.futures
 import time
+import slicer
+import vtk
+
+# create a node for transformation matrix
+transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
 
 VMP_SLOPE = 0.345
     
@@ -333,6 +338,9 @@ def Main(id_list, mapping, calibrationFlag):
                             transformation_matrix[:3, :3] = rotation_matrix
                             transformation_matrix[:3, 3] = [tx, ty, tz]
                             
+                            # create vtk 4x4 matrix and set it to calculated matrix
+                            vtk_matrix = vtk.vtkMatrix4x4()
+                            transformNode.SetMatrixTransformToParent(vtk_matrix)
                             print(transformation_matrix)
                     else:
                         print(f"Can't find a valid mapping for marker: {marker_id}")
