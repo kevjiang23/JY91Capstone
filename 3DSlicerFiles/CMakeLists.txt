@@ -20,6 +20,9 @@ include(${Slicer_USE_FILE})
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(ReconstructionWorkflow)
+add_subdirectory(Test0)
+add_subdirectory(Test1)
+add_subdirectory(Test3)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
