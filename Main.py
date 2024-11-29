@@ -17,6 +17,7 @@ import argparse
 import sys
 import numpy as np
 import cv2 as cv
+from pypylon import pylon
 from ArucoSetting import ARUCO_DICT
 from ArucoSetting import Marker_Length
 from PnPSolver import EstimatePoseSingleMarkers
@@ -26,6 +27,12 @@ from Refinement import getExistenceRegionFromImage
 from VMPDetectionFxns import blackPeakDetection, warp
 import concurrent.futures
 import time
+from datetime import datetime
+# import slicer
+#import vtk
+
+# create a node for transformation matrix
+#transformNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLTransformNode')
 
 VMP_SLOPE = 0.345
     
@@ -194,6 +201,24 @@ def calculate_average_with_outlier_removal(values):
     # Return the average
     return filtered_mean
 
+def euler_to_rotation_matrix(roll, pitch, yaw):
+    # Create individual rotation matrices for each axis
+    R_x = np.array([[1, 0, 0],
+                    [0, np.cos(roll), -np.sin(roll)],
+                    [0, np.sin(roll), np.cos(roll)]])
+    
+    R_y = np.array([[np.cos(pitch), 0, np.sin(pitch)],
+                    [0, 1, 0],
+                    [-np.sin(pitch), 0, np.cos(pitch)]])
+    
+    R_z = np.array([[np.cos(yaw), -np.sin(yaw), 0],
+                    [np.sin(yaw), np.cos(yaw), 0],
+                    [0, 0, 1]])
+    
+    # Combine rotations (R_z * R_y * R_x)
+    R = np.dot(R_z, np.dot(R_y, R_x))
+    return R
+
 def Main(id_list, mapping, calibrationFlag):
     """
     Main function that performs the pose detection of LentiMarks from video stream.
@@ -208,43 +233,55 @@ def Main(id_list, mapping, calibrationFlag):
     """
     distanace_dict = [(0,0) for id in id_list]
     # open webcam video stream
-    cap = cv.VideoCapture(0)
-    cap.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+
+    #cap = cv.VideoCapture(0) #instead, we're gonna use basler camera:
+    camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+
+    # camera.Width.Value = 1920
+    # camera.Height.Value = 1080
+        
+    camera.Open()
+    camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+    
+    #cap.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    #cap.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
     # width = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
     # height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
 
     distanceArrayX = []
     distanceArrayY = []
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers = 8) as executor:
-    # Currently contains array of all frams taken for analysis
-        while True:
-            ret, original_frame = cap.read()
-            if not ret:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+    # Start grabbing frames for analysis
+        while camera.IsGrabbing():
+        # Retrieve a frame from the Basler camera
+            grab_result = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+        
+            if grab_result.GrabSucceeded():
+                # Convert grab result to an OpenCV image (as numpy array)
+                # original_frame = grab_result.Array
+                original_frame = cv.cvtColor(grab_result.Array, cv.COLOR_GRAY2RGB)
+                
+                # Submit task to the process pool
+                futures = [executor.submit(DetectLentiMarkTask, original_frame.copy(), id, calibrationFlag) for id in id_list]
+            
+                # Release the grab result after processing to free memory
+                grab_result.Release()
+            
+                # Get results from futures
+                processed_frames = []
+                distance = []
+                translation = []
+                rotation = []
+            
+                for future in futures:
+                    result = future.result()
+                    processed_frames.append(result[0])
+                    distance.append(result[2])
+                    translation.append(result[3])
+                    rotation.append(result[4])
+            else:
                 break
-
-            # submit task to the process pool
-            futures = [executor.submit(DetectLentiMarkTask, original_frame.copy(), id, calibrationFlag) for id in id_list]
-            #DetectLentiMarkTask(original_frame.copy(), 0, True)
-            # get result
-            processed_frames = []
-
-            distance = []
-
-            translation = []
-
-            rotation = []
-
-            for future in futures:#concurrent.futures.as_completed(futures)
-                processed_frames.append(future.result()[0])
-
-                distance.append(future.result()[2])
-
-                translation.append(future.result()[3])
-
-                rotation.append(future.result()[4])
-
 
             # Code for VMP Calibration, triggers when marker is centered and calibrationFlag is active
             if(future.result()[1] == True and calibrationFlag == True):
@@ -292,7 +329,21 @@ def Main(id_list, mapping, calibrationFlag):
                             print(f"marker: {marker_id}, Result: Not detected")
                         else:
                             result = func(distanace_dict[markers])
-                            print(f"Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0],result[1],rotation[markers][2])}")
+                            timestamp = datetime.now().strftime('%H:%M:%S.%f')[:-3]  # Format to include milliseconds
+                            print(f"Timestamp: {timestamp}, Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0], result[1], rotation[markers][2])}")
+                            #create 4x4 matrix:
+                            tx, ty, tz = translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]
+                            angle_x, angle_y, angle_z = result[0],result[1],rotation[markers][2]
+                            rotation_matrix = euler_to_rotation_matrix(angle_x, angle_y, angle_z)
+
+                            # transformation_matrix = np.eye(4)
+                            # transformation_matrix[:3, :3] = rotation_matrix
+                            # transformation_matrix[:3, 3] = [tx, ty, tz]
+                            
+                            # # create vtk 4x4 matrix and set it to calculated matrix
+                            # vtk_matrix = vtk.vtkMatrix4x4()
+                            # transformNode.SetMatrixTransformToParent(vtk_matrix)
+                            # print(transformation_matrix)
                     else:
                         print(f"Can't find a valid mapping for marker: {marker_id}")
                 
@@ -305,8 +356,11 @@ def Main(id_list, mapping, calibrationFlag):
             if cv.waitKey(1) & 0xFF == ord('q'):
                     break
     # When everything done, release the capture
-    cap.release()
+    #cap.release() #replaced with below code for basler
     cv.destroyAllWindows()
+
+    camera.StopGrabbing()
+    camera.Close()
 
 
 
