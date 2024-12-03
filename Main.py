@@ -328,7 +328,8 @@ def Main(id_list, mapping, calibrationFlag):
                             print(f"marker: {marker_id}, Result: Not detected")
                         else:
                             result = func(distanace_dict[markers])
-                            print(f"Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0],result[1],rotation[markers][2])}")
+                            # print(f"Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0],result[1],rotation[markers][2])}")
+                            print(f"Marker: {marker_id}, Angle X: {(result[0])}")
                             #create 4x4 matrix:
                             tx, ty, tz = translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]
                             angle_x, angle_y, angle_z = result[0],result[1],rotation[markers][2]
