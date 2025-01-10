@@ -28,6 +28,10 @@ from VMPDetectionFxns import blackPeakDetection, warp
 import concurrent.futures
 import time
 from datetime import datetime
+import random
+
+import streamTest # import the streamTest.py command function
+
 # import slicer
 #import vtk
 
@@ -150,7 +154,7 @@ def DetectLentiMarkFromImageObject(frame, given_id, detector, intrinsic_camera, 
                         else:
                             zP = "Good!"
 
-                        print(f"{xA}, {yA}, {zA}, {xP}, {yP}, {zP}")
+                        print(f"{xA}, {yA}, {zA}, {xP}, {yP}, {zP}") 
 
                         if(abs(rot_params_rv(R)[0]) < 0.5 and abs(rot_params_rv(R)[1]) < 0.5 and abs(rot_params_rv(R)[2]) < 1 and abs(tvec[0][0]) < 1 and abs(tvec[1][0]) < 1 and tvec[2][0] < 100):
                             centerDetected = True
@@ -331,6 +335,10 @@ def Main(id_list, mapping, calibrationFlag):
                             result = func(distanace_dict[markers])
                             timestamp = datetime.now().strftime('%H:%M:%S.%f')[:-3]  # Format to include milliseconds
                             print(f"Timestamp: {timestamp}, Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0], result[1], rotation[markers][2])}")
+                            
+                            #streamTest.send_coors(random.randint(), random.randint()+1, random.randint()+2)
+                            streamTest.send_coors(translation[markers][0][0], translation[markers][1][0], translation[markers][2][0])
+                            
                             #create 4x4 matrix:
                             tx, ty, tz = translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]
                             angle_x, angle_y, angle_z = result[0],result[1],rotation[markers][2]
