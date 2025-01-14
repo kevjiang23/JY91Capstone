@@ -20,7 +20,7 @@ def euler_to_rotation_matrix(roll, pitch, yaw):
     R = np.dot(R_z, np.dot(R_y, R_x))
     return R
 
-def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle):
+def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle, marker_id):
     # Create a server to send data
     server = pyigtl.OpenIGTLinkServer(port=18944)
     num = 0
@@ -36,7 +36,7 @@ def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle):
         transformation_matrix[:3, :3] = rotation_matrix
         transformation_matrix[:3, 3] = [xcoor, ycoor, zcoor]
 
-        message = pyigtl.TransformMessage(device_name="Marker", matrix=transformation_matrix)
+        message = pyigtl.TransformMessage(device_name="Marker " + marker_id, matrix=transformation_matrix)
         server.send_message(message)
         print(f"Sent RAS position: {ras_position}")
         num+=1
