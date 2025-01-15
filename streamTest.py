@@ -2,8 +2,6 @@ import pyigtl
 import time
 import numpy as np
 
-server = pyigtl.OpenIGTLinkServer(port=18944)
-
 def euler_to_rotation_matrix(roll, pitch, yaw):
     # Create individual rotation matrices for each axis
     R_x = np.array([[1, 0, 0],
@@ -22,29 +20,24 @@ def euler_to_rotation_matrix(roll, pitch, yaw):
     R = np.dot(R_z, np.dot(R_y, R_x))
     return R
 
-def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle, marker_id):
+def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle):
     # Create a server to send data
-    global server
-    
-    # RAS marker position
-    ras_position = [xcoor, ycoor, zcoor]
-    
-    # Compute transformation matrix
-    rotation_matrix = euler_to_rotation_matrix(xangle, yangle, zangle)
-    transformation_matrix = np.eye(4)
-    transformation_matrix[:3, :3] = rotation_matrix
-    transformation_matrix[:3, 3] = [xcoor, ycoor, zcoor]
+    server = pyigtl.OpenIGTLinkServer(port=18944)
+    num = 0
+    while True:
+        # Example RAS marker position
+        ras_position = [num, num+1, num+2]
+        # Create a TransformMessage to send the marker position
+        
+        # compute transformation matrix
+        rotation_matrix = euler_to_rotation_matrix(xangle, yangle, zangle)
 
-<<<<<<< HEAD
-        message = pyigtl.TransformMessage(device_name="Marker " + marker_id, matrix=transformation_matrix)
+        transformation_matrix = np.eye(4)
+        transformation_matrix[:3, :3] = rotation_matrix
+        transformation_matrix[:3, 3] = [xcoor, ycoor, zcoor]
+
+        message = pyigtl.TransformMessage(device_name="Marker", matrix=transformation_matrix)
         server.send_message(message)
         print(f"Sent RAS position: {ras_position}")
         num+=1
         time.sleep(1)  # Send updates every 1s
-=======
-    message = pyigtl.TransformMessage(device_name="Marker", matrix=transformation_matrix)
-    
-    server.send_message(message)
-    print(f"Sent RAS position: {ras_position}")
-    time.sleep(3)  # for debugging
->>>>>>> 8f92189464a16fdc5379d86bffbecfb4124286e1
