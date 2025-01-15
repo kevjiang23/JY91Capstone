@@ -36,7 +36,7 @@ def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle, marker_id):
         transformation_matrix[:3, :3] = rotation_matrix
         transformation_matrix[:3, 3] = [xcoor, ycoor, zcoor]
 
-        message = pyigtl.TransformMessage(device_name="Marker", matrix=transformation_matrix)
+        message = pyigtl.TransformMessage(device_name="Marker " + marker_id, matrix=transformation_matrix)
         server.send_message(message)
         print(f"Sent RAS position: {ras_position}")
         num+=1
