@@ -316,10 +316,11 @@ def Main(id_list, mapping, calibrationFlag):
                         else:
                             result = func(distanace_dict[markers])
                             timestamp = datetime.now().strftime('%H:%M:%S.%f')[:-3]  # Format to include milliseconds
-                            print(f"Timestamp: {timestamp}, Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0], result[1], rotation[markers][2])}")
-                            
+                            # print(f"Timestamp: {timestamp}, Marker: {marker_id}, Coordinate: {translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]}, Angle: {(result[0], result[1], rotation[markers][2])}")
+                            print(f"Timestamp: {timestamp}, Marker: {marker_id}, Coordinate: ({float(translation[markers][0][0])}, {float(translation[markers][1][0])}, {float(translation[markers][2][0])}), Angle: ({float(result[0])}, {float(result[1])}, {float(rotation[markers][2])})")
+
                             #streamTest.send_coors(10, 10, 10, 0, 0, 0)
-                            streamTest.send_coors(translation[markers][0][0], translation[markers][1][0], translation[markers][2][0], result[0], result[1], rotation[markers][2])
+                            streamTest.send_coors(translation[markers][0][0], translation[markers][1][0], translation[markers][2][0], result[0], result[1], rotation[markers][2], marker_id)
 
                             #create 4x4 matrix:
                             #tx, ty, tz = translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]
