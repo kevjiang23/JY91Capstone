@@ -20,7 +20,7 @@ def euler_to_rotation_matrix(roll, pitch, yaw):
     R = np.dot(R_z, np.dot(R_y, R_x))
     return R
 
-def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle):
+def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle, marker_id):
     # Create a server to send data
     server = pyigtl.OpenIGTLinkServer(port=18944)
     num = 0
