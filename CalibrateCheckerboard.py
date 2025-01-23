@@ -2,6 +2,7 @@ import numpy
 import cv2 as cv
 import pickle
 import glob
+from pypylon import pylon
 #import pyttsx3
 
 def photograph():
@@ -9,39 +10,51 @@ def photograph():
     cv.startWindowThread()
 
     # open webcam video stream
-    cap = cv.VideoCapture(0)
-    cap.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+    # cap = cv.VideoCapture(0)
+    # cap.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    # cap.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+    cap = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
+    cap.Open()
+    cap.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+    
     i = 1
     #engine.say('Start calibration process')
     #engine.runAndWait()
 
-    while(cap.isOpened()):
+    while(cap.isGrabbing()):
         # Capture frame-by-frame
-        ret, frame = cap.read()
-        if(ret):
-            # Display the resulting frame
-            cv.imshow('frame',frame)
-            key = cv.waitKey(1)
-            if key == ord('q'):
-                #engine.say('Quit.')
-                #engine.runAndWait()
-                break
-                # exit()
-            if key == ord('p'):
-                name = "chessboard-" + str(i) + ".png"
-                cv.imwrite("./images/" + name, frame)
-                if(i == 16):
-                    #engine.say('Photo' + str(i) + 'has been taken.')
-                    #engine.say('All works done!')
+        # ret, frame = cap.read()
+        grab_result = cap.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
+        if grab_result.GrabSucceeded():
+            frame = cv.cvtColor(grab_result.Array, cv.COLOR_BGR2RGB)
+            ret = True
+            
+            if(ret):
+                # Display the resulting frame
+                cv.imshow('frame',frame)
+                key = cv.waitKey(1)
+                if key == ord('q'):
+                    #engine.say('Quit.')
                     #engine.runAndWait()
                     break
-                #engine.say('Photo' + str(i) + 'has been taken.')
-                #engine.runAndWait()
-                i += 1
+                    # exit()
+                if key == ord('p'):
+                    name = "chessboard-" + str(i) + ".png"
+                    cv.imwrite("./images/" + name, frame)
+                    if(i == 16):
+                        #engine.say('Photo' + str(i) + 'has been taken.')
+                        #engine.say('All works done!')
+                        #engine.runAndWait()
+                        break
+                    #engine.say('Photo' + str(i) + 'has been taken.')
+                    #engine.runAndWait()
+                    i += 1
+        grab_result.Release()
 
     # When everything done, release the capture
-    cap.release()
+    # cap.release()
+    cap.stopGrabbing()
+    cap.Close()
     cv.destroyAllWindows()
 
 def calibration():
