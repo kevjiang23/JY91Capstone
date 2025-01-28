@@ -8,7 +8,7 @@ while True: # continously sends marker positions to the server
     # Example RAS marker position
     ras_position = [num, num+1, num+2] # Creates an example RAS position
     # Create a TransformMessage to send the marker position
-    message = pyigtl.TransformMessage(device_name="Marker", matrix=[
+    message = pyigtl.TransformMessage(device_name="Test Marker", matrix=[
         [1, 0, 0, ras_position[0]],  # Rotation and translation in RAS for x axis
         [0, 1, 0, ras_position[1]],  # Rotation and translation in RAS for y axis
         [0, 0, 1, ras_position[2]],  # Rotation and translation in RAS for z axis
