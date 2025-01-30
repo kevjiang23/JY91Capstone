@@ -21,7 +21,7 @@ def photograph():
     #engine.say('Start calibration process')
     #engine.runAndWait()
 
-    while(cap.isGrabbing()):
+    while cap.IsGrabbing():
         # Capture frame-by-frame
         # ret, frame = cap.read()
         grab_result = cap.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
@@ -53,7 +53,7 @@ def photograph():
 
     # When everything done, release the capture
     # cap.release()
-    cap.stopGrabbing()
+    cap.StopGrabbing()
     cap.Close()
     cv.destroyAllWindows()
 
@@ -64,8 +64,8 @@ def calibration():
     imgpoints = [] # 2D point in image plane, determined by CV2
 
     # Chessboard variables (row and colunm)
-    CHESSBOARD_CORNERS_ROWCOUNT = 9
-    CHESSBOARD_CORNERS_COLCOUNT = 6
+    CHESSBOARD_CORNERS_ROWCOUNT = 8
+    CHESSBOARD_CORNERS_COLCOUNT = 5
 
 
     # The following line generates all the tuples needed at (0, 0, 0)

@@ -110,7 +110,7 @@ def DetectLentiMarkFromImageObject(frame, given_id, detector, intrinsic_camera, 
                     # from R-vector to R-matrix
                     R, _ = cv.Rodrigues(rvec)
 
-                    if(calibrationFlag == True):
+                    if calibrationFlag == True:
                         # Printed Aids
                         xA,yA,zA,xP,yP,zP = "", "", "", "", "", ""
 
@@ -158,6 +158,7 @@ def DetectLentiMarkFromImageObject(frame, given_id, detector, intrinsic_camera, 
 
                         if(abs(rot_params_rv(R)[0]) < 0.5 and abs(rot_params_rv(R)[1]) < 0.5 and abs(rot_params_rv(R)[2]) < 1 and abs(tvec[0][0]) < 1 and abs(tvec[1][0]) < 1 and tvec[2][0] < 100):
                             centerDetected = True
+                            print("calibration is successful")
                     
                     # else:
                     #     print(f"World Coordinate of marker {given_id}: {(tvec[0][0], tvec[1][0], tvec[2][0])}")
