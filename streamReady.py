@@ -27,4 +27,4 @@ while True: # continously sends marker positions to the server
     server.send_message(message)
     print(f"Sent RAS position: {ras_position}")
     num+=1
-    time.sleep(3)  # Send updates every 3s
+    time.sleep(1)  # Send updates every 3s

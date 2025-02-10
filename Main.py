@@ -323,7 +323,7 @@ def Main(id_list, mapping, calibrationFlag):
 
                             #streamTest.send_coors(10, 10, 10, 0, 0, 0)
                             streamTest.send_coors(translation[markers][0][0], translation[markers][1][0], translation[markers][2][0], math.radians(result[0]), math.radians(result[1]), math.radians(rotation[markers][2]), marker_id)
-
+                            
                             #create 4x4 matrix:
                             #tx, ty, tz = translation[markers][0][0], translation[markers][1][0], translation[markers][2][0]
                             #angle_x, angle_y, angle_z = result[0],result[1],rotation[markers][2]
