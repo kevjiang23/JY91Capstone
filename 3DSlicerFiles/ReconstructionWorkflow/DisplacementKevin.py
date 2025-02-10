@@ -14,7 +14,7 @@ import ManageSlicer as ms
 import ManageUI as ui
 
 
-class NavigationTestingKevin(ScriptedLoadableModule):
+class DisplacementTestingKevin(ScriptedLoadableModule):
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = "Live Track Displacement Kevin"
@@ -29,7 +29,7 @@ class NavigationTestingKevin(ScriptedLoadableModule):
     ##########
 
 
-class NavigationTestingKevinWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
+class DisplacementTestingKevinWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def __init__(self, parent=None):
         ScriptedLoadableModuleWidget.__init__(self, parent)
         VTKObservationMixin.__init__(self)
@@ -346,11 +346,11 @@ if __name__ == "__main__":
 
 
 
-class NavigationTestingKevinLogic(ScriptedLoadableModuleLogic):
+class DisplacementTestingKevinLogic(ScriptedLoadableModuleLogic):
     def __init__(self):
         ScriptedLoadableModuleLogic.__init__(self)
 
-class NavigationTestingKevinTest(ScriptedLoadableModuleTest):
+class DisplacementTestingKevinTest(ScriptedLoadableModuleTest):
     def setUp(self):
         slicer.mrmlScene.Clear()
 
@@ -360,7 +360,7 @@ class NavigationTestingKevinTest(ScriptedLoadableModuleTest):
 
     def test_NavigationTestingKevin(self):
         self.delayDisplay("Start test")
-        logic = NavigationTestingLogic()
+        logic = DisplacementTestingKevinLogic()
         self.delayDisplay("Test Passed")
 
 
