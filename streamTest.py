@@ -39,6 +39,17 @@ def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle, marker_id): #This fu
     transformation_matrix[:3, :3] = rotation_matrix # Assign the rotation matrix to the top-left 3X3 part.
     transformation_matrix[:3, 3] = [xcoor, ycoor, zcoor] #Sets the last column to the markers RAS position
 
+    if marker_id == 0:
+        pass
+    elif marker_id == 11:
+        pass
+    elif marker_id == 87: #stylus
+        pass
+    elif marker_id == 999:
+        pass
+    else:
+        print("Fuck you")
+
     if STL_ON:
         message = pyigtl.TransformMessage(device_name="Mandible", matrix=transformation_matrix)  # Encodes the transformation matrix into a format that OpenIGTLink clients like 3D Slicer can interpret
         server.send_message(message) #Sends the encoded message to the connected client using the OpenIGTLink server
