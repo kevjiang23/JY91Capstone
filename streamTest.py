@@ -38,13 +38,15 @@ def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle, marker_id): #This fu
     transformation_matrix = np.eye(4) #initializes a 4X4 identity matrix
     transformation_matrix[:3, :3] = rotation_matrix # Assign the rotation matrix to the top-left 3X3 part.
     transformation_matrix[:3, 3] = [xcoor, ycoor, zcoor] #Sets the last column to the markers RAS position
+    
+    marker_name = "Marker " + str(marker_id)
 
-    if marker_id == 0:
+    if marker_id == 0: #mandible?
         pass
     elif marker_id == 11:
         pass
     elif marker_id == 87: #stylus
-        pass
+        marker_name = "StylusRefToTracker"
     elif marker_id == 999:
         pass
     else:
@@ -54,8 +56,8 @@ def send_coors(xcoor, ycoor, zcoor, xangle, yangle, zangle, marker_id): #This fu
         message = pyigtl.TransformMessage(device_name="Mandible", matrix=transformation_matrix)  # Encodes the transformation matrix into a format that OpenIGTLink clients like 3D Slicer can interpret
         server.send_message(message) #Sends the encoded message to the connected client using the OpenIGTLink server
     else:
-        message = pyigtl.TransformMessage(device_name="Marker " + str(marker_id), matrix=transformation_matrix)  # Encodes the transformation matrix into a format that OpenIGTLink clients like 3D Slicer can interpret
+        message = pyigtl.TransformMessage(device_name=marker_name, matrix=transformation_matrix)  # Encodes the transformation matrix into a format that OpenIGTLink clients like 3D Slicer can interpret
         server.send_message(message) #Sends the encoded message to the connected client using the OpenIGTLink server
 
-    print(f"Sent RAS position: {ras_position}")
+    print(f"Sent RAS position: {ras_position} of marker {marker_name}")
     #time.sleep(3)  # for debugging
